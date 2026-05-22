@@ -18,12 +18,12 @@ export default function Dashboard() {
             if (!token) return navigate('/login');
 
             try {
-                const userRes = await fetch('http://localhost:5001/api/user-data', {
+                const userRes = await fetch('https://inquiry-backend-3pec.onrender.com', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const userDataResult = await userRes.json();
 
-                const inqRes = await fetch('http://localhost:5001/api/inquiries', {
+                const inqRes = await fetch('https://inquiry-backend-3pec.onrender.com', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const inqDataResult = await inqRes.json();
@@ -47,7 +47,7 @@ export default function Dashboard() {
         e.preventDefault();
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:5001/api/inquiries', {
+            const res = await fetch('https://inquiry-backend-3pec.onrender.com', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ customerName, customerEmail, message })
@@ -66,7 +66,7 @@ export default function Dashboard() {
         const token = localStorage.getItem('token');
 
         try {
-            const res = await fetch(`http://localhost:5001/api/inquiries/${id}`, {
+            const res = await fetch(`https://inquiry-backend-3pec.onrender.com`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ status: newStatus })
@@ -86,7 +86,7 @@ export default function Dashboard() {
 
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`http://localhost:5001/api/inquiries/${id}`, {
+            const res = await fetch(`https://inquiry-backend-3pec.onrender.com`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

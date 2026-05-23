@@ -1,6 +1,11 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://inquiry-manager-inky.vercel.app'
+    ]
+}));
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -11,7 +16,12 @@ const Inquiry = require('./models/Inquiry');
 const verifyToken = require('./middleware/auth'); // Our new bouncer!
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://inquiry-manager-inky.vercel.app'
+    ]
+}));
 app.use(express.json());
 
 // Database Connection

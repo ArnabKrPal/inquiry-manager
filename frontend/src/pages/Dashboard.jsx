@@ -12,18 +12,22 @@ export default function Dashboard() {
     const [customerEmail, setCustomerEmail] = useState('');
     const [message, setMessage] = useState('');
 
+    // AI State
+    const [drafts, setDrafts] = useState({});
+    const [isDrafting, setIsDrafting] = useState(false);
+
     useEffect(() => {
         const fetchProtectedData = async () => {
             const token = localStorage.getItem('token');
             if (!token) return navigate('/login');
 
             try {
-                const userRes = await fetch('https://inquiry-backend-3pec.onrender.com', {
+                const userRes = await fetch('https://inquiry-backend-3pec.onrender.com/api/user-data', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const userDataResult = await userRes.json();
 
-                const inqRes = await fetch('https://inquiry-backend-3pec.onrender.com', {
+                const inqRes = await fetch('https://inquiry-backend-3pec.onrender.com/api/inquiries', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const inqDataResult = await inqRes.json();
@@ -47,7 +51,7 @@ export default function Dashboard() {
         e.preventDefault();
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('https://inquiry-backend-3pec.onrender.com', {
+            const res = await fetch('https://inquiry-backend-3pec.onrender.com/api/inquiries', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ customerName, customerEmail, message })
@@ -64,17 +68,14 @@ export default function Dashboard() {
     const handleUpdateStatus = async (id, currentStatus) => {
         const newStatus = currentStatus === 'New' ? 'Resolved' : 'New';
         const token = localStorage.getItem('token');
-
         try {
-            const res = await fetch(`https://inquiry-backend-3pec.onrender.com`, {
+            const res = await fetch(`https://inquiry-backend-3pec.onrender.com/api/inquiries/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ status: newStatus })
             });
             const data = await res.json();
-
             if (data.success) {
-                // Update the specific inquiry in our React state so the UI changes instantly
                 setInquiries(inquiries.map(inq => inq._id === id ? data.inquiry : inq));
             }
         } catch (err) { alert('Failed to update status'); }
@@ -83,20 +84,38 @@ export default function Dashboard() {
     // --- DELETE ---
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this inquiry?")) return;
-
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`https://inquiry-backend-3pec.onrender.com`, {
+            const res = await fetch(`https://inquiry-backend-3pec.onrender.com/api/inquiries/${id}`, {
                 method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries(inquiries.filter(inq => inq._id !== id));
+            }
+        } catch (err) { alert('Failed to delete inquiry'); }
+    };
+
+    // --- AI AUTO-DRAFT ---
+    const handleGenerateDraft = async (id) => {
+        setIsDrafting(true);
+        const token = localStorage.getItem('token');
+
+        try {
+            const res = await fetch(`https://inquiry-backend-3pec.onrender.com/api/inquiries/${id}/draft`, {
+                method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
 
             if (data.success) {
-                // Remove the deleted inquiry from the screen instantly
-                setInquiries(inquiries.filter(inq => inq._id !== id));
+                setDrafts(prev => ({ ...prev, [id]: data.draft }));
             }
-        } catch (err) { alert('Failed to delete inquiry'); }
+        } catch (err) {
+            alert('Failed to generate AI draft');
+        }
+        setIsDrafting(false);
     };
 
     const handleLogout = () => {
@@ -162,8 +181,6 @@ export default function Dashboard() {
                                                 <h3 className="font-bold text-gray-900 text-lg">{inq.customerName}</h3>
                                                 <p className="text-sm text-blue-600">{inq.customerEmail}</p>
                                             </div>
-
-                                            {/* Dynamic Status Badge */}
                                             <span className={`text-xs px-3 py-1 rounded-full font-semibold ${inq.status === 'Resolved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {inq.status}
@@ -173,6 +190,24 @@ export default function Dashboard() {
                                         <p className="text-gray-700 text-sm mb-4 bg-gray-50 p-3 rounded-md border border-gray-100">
                                             "{inq.message}"
                                         </p>
+
+                                        {/* AI Auto-Reply Section */}
+                                        <div className="mt-4 pt-3 border-t border-gray-100">
+                                            <button
+                                                onClick={() => handleGenerateDraft(inq._id)}
+                                                disabled={isDrafting}
+                                                className="text-sm bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-bold hover:bg-purple-200 transition mb-2 disabled:opacity-50"
+                                            >
+                                                {isDrafting ? 'Thinking...' : '✨ Auto-Draft Reply'}
+                                            </button>
+
+                                            {drafts[inq._id] && (
+                                                <div className="mt-2 p-4 bg-purple-50 rounded-lg border border-purple-200 text-sm text-gray-800 whitespace-pre-wrap">
+                                                    <span className="font-bold text-purple-800 block mb-2">Generated Draft:</span>
+                                                    {drafts[inq._id]}
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Action Buttons */}
                                         <div className="flex justify-between items-center mt-2 border-t border-gray-100 pt-3">

@@ -1,14 +1,9 @@
 require('dotenv').config();
 const express = require('express');
-app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://inquiry-manager-inky.vercel.app'
-    ]
-}));
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cors = require('cors'); // <-- ADDED: Tells the server what CORS is!
 
 // Import Models and Middleware
 const User = require('./models/User');
@@ -16,12 +11,15 @@ const Inquiry = require('./models/Inquiry');
 const verifyToken = require('./middleware/auth'); // Our new bouncer!
 
 const app = express();
+
+// Our Bouncer VIP List (perfectly placed AFTER app is created)
 app.use(cors({
     origin: [
         'http://localhost:5173',
         'https://inquiry-manager-inky.vercel.app'
     ]
 }));
+
 app.use(express.json());
 
 // Database Connection
@@ -101,8 +99,6 @@ app.get('/api/inquiries', verifyToken, async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`🚀 Server is running live on port ${PORT}`));
 // 3. UPDATE an Inquiry (Change status)
 app.put('/api/inquiries/:id', verifyToken, async (req, res) => {
     try {
@@ -134,3 +130,6 @@ app.delete('/api/inquiries/:id', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'Failed to delete inquiry.' });
     }
 });
+
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`🚀 Server is running live on port ${PORT}`));

@@ -10,7 +10,7 @@ export default function Login() {
         e.preventDefault();
 
         try {
-            const response = await fetch('https://inquiry-backend-3pec.onrender.com/api/signup', {
+            const res = await fetch('https://inquiry-backend-3pec.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
